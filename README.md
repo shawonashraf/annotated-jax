@@ -24,11 +24,6 @@ source .venv/bin/activate
 
 Selecting a group on the wrong platform is a no-op, e.g. `--group cuda` on macos installs nothing extra and jax falls back to cpu.
 
-> [!TIP]
-> You can also use the provided devcontainer configuration.
-> ```bash
-> devcontainer up --workspace-folder .
-> ```
 
 ## jupyter lab
 
