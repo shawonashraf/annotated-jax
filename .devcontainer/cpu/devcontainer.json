@@ -1,0 +1,44 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "annotated-jax-cpu",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"dockerFile": "../../devcontainer.Dockerfile",
+	"mounts": [
+		"source=${localEnv:HOME}/.cache/huggingface,target=/workspaces/.cache/huggingface,type=bind,consistency=cached"
+	],
+	"remoteEnv": {
+		"HF_TOKEN": "${localEnv:HF_TOKEN}",
+		"WANDB_API_KEY": "${localEnv:WANDB_API_KEY}"
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {
+	// 	"ghcr.io/devcontainers/features/nvidia-cuda:1": {}
+	// },
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "pip3 install --user -r requirements.txt",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-toolsai.jupyter",
+				"tensorboard.tensorboard",
+				"charliermarsh.ruff",
+				"softwaredotcom.swdc-vscode",
+				"ms-python.gather",
+				"vstirbu.vscode-mermaid-preview",
+				"wholroyd.jinja"
+			]
+		}
+	},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
