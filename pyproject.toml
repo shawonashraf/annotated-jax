@@ -15,9 +15,7 @@ dependencies = [
     "grain>=0.2.16",
     "ipython>=9.11.0",
     "ipywidgets>=8.1.8",
-    "jax-mps>=0.10.0 ; sys_platform == 'darwin'",
-    "jax[cpu]>=0.10.0; sys_platform == 'darwin'",
-    "jax[cuda]>=0.10.0; sys_platform == 'linux'",
+    "jax>=0.10.0",
     "jupyterlab>=4.5.10",
     "loguru>=0.7.3",
     "matplotlib>=3.10.8",
@@ -35,6 +33,28 @@ dependencies = [
     "tensorflow>=2.21.0",
     "tensorflow-datasets>=4.9.9",
     "wandb>=0.25.1",
+]
+
+# Accelerator backends. The base `jax` dependency ships the CPU backend on every
+# platform; pick exactly one of these groups for GPU support, e.g.
+#   uv sync --group cuda   # NVIDIA, linux (bundles CUDA wheels)
+#   uv sync --group rocm   # AMD, linux (uses the system ROCm 7 install)
+#   uv sync --group mps    # Apple silicon, macOS
+[dependency-groups]
+cuda = [
+    "jax[cuda]>=0.10.0 ; sys_platform == 'linux'",
+]
+rocm = [
+    "jax[rocm7-local]>=0.10.0 ; sys_platform == 'linux'",
+]
+mps = [
+    "jax-mps>=0.10.0 ; sys_platform == 'darwin'",
+]
+
+[tool.uv]
+# The backends are mutually exclusive, so lock them as separate resolutions.
+conflicts = [
+    [{ group = "cuda" }, { group = "rocm" }, { group = "mps" }],
 ]
 
 [build-system]

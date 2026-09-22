@@ -7,8 +7,13 @@
 > [!IMPORTANT]
 > Ensure that you've `uv` installed.
 
+The base install is CPU-only. Pick the dependency group that matches your accelerator; the groups are mutually exclusive.
+
 ```bash
-uv sync
+uv sync                # cpu only
+uv sync --group cuda   # nvidia gpu, linux (bundles the cuda wheels)
+uv sync --group rocm   # amd gpu, linux (expects a system rocm 7 install)
+uv sync --group mps    # apple silicon, macos
 source .venv/bin/activate
 ```
 
