@@ -232,14 +232,14 @@ wheels = [
 
 [[package]]
 name = "anyio"
-version = "4.12.1"
+version = "4.14.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "idna" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/f0/5eb65b2bb0d09ac6776f2eb54adee6abe8228ea05b20a5ad0e4945de8aac/anyio-4.12.1.tar.gz", hash = "sha256:41cfcc3a4c85d3f05c932da7c26d0201ac36f72abd4435ba90d0464a3ffed703", size = 228685, upload-time = "2026-01-06T11:45:21.246Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/61/cc/a381afa6efea9f496eff839d4a6a1aed3bfafc7b3ab4b0d1b243a12573dd/anyio-4.14.2.tar.gz", hash = "sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f", size = 260176, upload-time = "2026-07-12T20:29:07.082Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/0e/27be9fdef66e72d64c0cdc3cc2823101b80585f8119b5c112c2e8f5f7dab/anyio-4.12.1-py3-none-any.whl", hash = "sha256:d405828884fc140aa80a3c667b8beed277f1dfedec42ba031bd6ac3db606ab6c", size = 113592, upload-time = "2026-01-06T11:45:19.497Z" },
+    { url = "https://files.pythonhosted.org/packages/da/35/f2287558c17e29fafc8ef3daf819bb9834061cfa43bff8014f7df7f63bdc/anyio-4.14.2-py3-none-any.whl", hash = "sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494", size = 125813, upload-time = "2026-07-12T20:29:05.763Z" },
 ]
 
 [[package]]
@@ -299,8 +299,8 @@ name = "array-record"
 version = "0.8.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "absl-py" },
-    { name = "etils", extra = ["epath"] },
+    { name = "absl-py", marker = "sys_platform != 'win32' or (extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps') or (extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-rocm') or (extra == 'group-13-annotated-jax-mps' and extra == 'group-13-annotated-jax-rocm')" },
+    { name = "etils", extra = ["epath"], marker = "sys_platform != 'win32' or (extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps') or (extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-rocm') or (extra == 'group-13-annotated-jax-mps' and extra == 'group-13-annotated-jax-rocm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/63/fd734c5f2be8017d4f33cff0dd3d3e2f91de3ab988f93755cdc54d67b654/array_record-0.8.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:fa94fa053c1afaecc183a1c31463fd89d1b7b148cc526095bfc50ab58967e47c", size = 3989122, upload-time = "2025-11-13T16:15:38.375Z" },
@@ -1340,12 +1340,12 @@ wheels = [
 
 [package.optional-dependencies]
 cuda = [
-    { name = "jax-cuda12-plugin", extra = ["with-cuda"], marker = "extra == 'group-13-annotated-jax-cuda' or (extra == 'group-13-annotated-jax-mps' and extra == 'group-13-annotated-jax-rocm')" },
-    { name = "jaxlib" },
+    { name = "jax-cuda12-plugin", extra = ["with-cuda"], marker = "(sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'group-13-annotated-jax-cuda') or (sys_platform == 'emscripten' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps') or (sys_platform == 'emscripten' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-rocm') or (sys_platform == 'win32' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps') or (sys_platform == 'win32' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-rocm') or (extra != 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps' and extra == 'group-13-annotated-jax-rocm')" },
+    { name = "jaxlib", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 rocm7-local = [
-    { name = "jax-rocm7-plugin" },
-    { name = "jaxlib" },
+    { name = "jax-rocm7-plugin", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "jaxlib", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 
 [[package]]
@@ -1362,7 +1362,7 @@ name = "jax-cuda12-plugin"
 version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jax-cuda12-pjrt" },
+    { name = "jax-cuda12-pjrt", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/91/e0/05aa6b3d3749441842143666105a5be7e7bd92d08df0f50f319ff854ee7b/jax_cuda12_plugin-0.10.0-cp313-cp313-manylinux_2_27_aarch64.whl", hash = "sha256:7479e67d9d98d4a0f525f94f8b81880dcc058631f6de118b91de91db1b4095ed", size = 6682499, upload-time = "2026-04-16T12:32:31.857Z" },
@@ -1396,8 +1396,8 @@ name = "jax-mps"
 version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jax" },
-    { name = "jaxlib" },
+    { name = "jax", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "jaxlib", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/84/a04711cbf295faaddaf34852c7e69906d055ed32d62525a8c0762d060807/jax_mps-0.10.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:e2efb4a2b2bbc11d81c58b7cca58cf46dd9296c867537eb8a8fe7220f6cec017", size = 45209995, upload-time = "2026-05-05T16:33:22.223Z" },
@@ -1416,7 +1416,7 @@ name = "jax-rocm7-plugin"
 version = "0.10.0.post1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jax-rocm7-pjrt" },
+    { name = "jax-rocm7-pjrt", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/d5/33e5bc1b98f77bf550ad299289c0170c6895ae763fd5ff63e163923554fe/jax_rocm7_plugin-0.10.0.post1-cp313-cp313-manylinux_2_27_x86_64.whl", hash = "sha256:9f7f9fe9dcb35c1899054e2e4740174df973f51c016f7b300f90d2effb7f42d3", size = 8263351, upload-time = "2026-06-16T14:15:41.483Z" },
@@ -2697,7 +2697,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps') or (sys_platform == 'emscripten' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-rocm') or (sys_platform == 'emscripten' and extra == 'group-13-annotated-jax-mps' and extra == 'group-13-annotated-jax-rocm') or (sys_platform == 'win32' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-mps') or (sys_platform == 'win32' and extra == 'group-13-annotated-jax-cuda' and extra == 'group-13-annotated-jax-rocm') or (sys_platform == 'win32' and extra == 'group-13-annotated-jax-mps' and extra == 'group-13-annotated-jax-rocm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -3934,11 +3934,11 @@ wheels = [
 
 [[package]]
 name = "urllib3"
-version = "2.7.0"
+version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c", size = 433602, upload-time = "2026-05-07T16:13:18.596Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/05/b17359e1cefb4f909b5e40b1b90a496d987258916dbbf88e842c729f510e/urllib3-2.8.0.tar.gz", hash = "sha256:63bf2ead4c879426ebf22ef2a781eeb4aa3b4ae798a0435506f8687fd5bb9b63", size = 458972, upload-time = "2026-09-15T19:29:36.253Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897", size = 131087, upload-time = "2026-05-07T16:13:17.151Z" },
+    { url = "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl", hash = "sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3", size = 135717, upload-time = "2026-09-15T19:29:34.577Z" },
 ]
 
 [[package]]
