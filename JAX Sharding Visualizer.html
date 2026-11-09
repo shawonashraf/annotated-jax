@@ -1,0 +1,677 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>JAX Sharding Visualizer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: control strip on top, then a two-panel stage (global array -> device mesh) with a shared flight layer, then code + facts. */
+:root {
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --ink: #141922;
+  --muted: #5a6474;
+  --line: #d6dce5;
+  --accent: #2f5fd0;
+  --accent-ink: #ffffff;
+  --code-bg: #f6f8fb;
+  --danger: #b4372f;
+  --c0: #3b6fe0; --c1: #e07a45; --c2: #2b9a74; --c3: #c2479a;
+  --c4: #8761d2; --c5: #c49512; --c6: #1d97b2; --c7: #d24b4b;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1117; --surface: #161b24; --ink: #e5e9f0; --muted: #98a2b3; --line: #2a3140;
+    --accent: #7d9dff; --accent-ink: #0e1117; --code-bg: #11151d; --danger: #ff7b72;
+    --c0: #6f97ff; --c1: #ff9c6b; --c2: #4cc79c; --c3: #ec74c3; --c4: #ab8cf5; --c5: #e8c04a; --c6: #4cc3dd; --c7: #ff7a7a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1117; --surface: #161b24; --ink: #e5e9f0; --muted: #98a2b3; --line: #2a3140;
+  --accent: #7d9dff; --accent-ink: #0e1117; --code-bg: #11151d; --danger: #ff7b72;
+  --c0: #6f97ff; --c1: #ff9c6b; --c2: #4cc79c; --c3: #ec74c3; --c4: #ab8cf5; --c5: #e8c04a; --c6: #4cc3dd; --c7: #ff7a7a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 20px;
+}
+header { display: grid; gap: 6px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.3rem);
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.lede { margin: 0; color: var(--muted); max-width: 64ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* controls */
+.controls {
+  display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: end;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px;
+}
+.group { display: grid; gap: 6px; min-width: 0; }
+.label {
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600;
+}
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button, .btn {
+  font: inherit; font-family: var(--font-mono); font-size: 0.82rem;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  border-radius: 7px; padding: 6px 10px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.seg button:hover, .btn:hover { border-color: var(--accent); }
+.seg button[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+}
+.seg button:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+.speed { width: 170px; max-width: 100%; }
+.speed output { font-family: var(--font-mono); color: var(--ink); letter-spacing: 0; text-transform: none; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.speed input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.speed input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.speed-ends { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); }
+.actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.btn { font-family: var(--font-body); font-weight: 600; font-size: 0.88rem; padding: 8px 14px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* stage */
+.stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 20px;
+}
+.panel { display: grid; gap: 12px; min-width: 0; }
+.panel h2 {
+  margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.05rem;
+}
+.panel .sub { margin: 0; color: var(--muted); font-size: 0.85rem; }
+
+.array-wrap { display: grid; grid-template-columns: auto auto; gap: 6px 8px; justify-content: start; }
+.dimtag {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap;
+}
+.dimtag b { color: var(--ink); font-weight: 600; }
+.dim0 { writing-mode: vertical-rl; transform: rotate(180deg); align-self: center; }
+
+.grid { display: grid; gap: 3px; }
+.cell {
+  width: var(--cs, 34px); height: var(--cs, 34px);
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: var(--fs, 0.75rem);
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--cc) 26%, var(--surface));
+  border: 1.5px solid color-mix(in oklab, var(--cc) 70%, var(--surface));
+  color: var(--ink);
+  transition: opacity .2s, box-shadow .2s, transform .2s;
+}
+.cell.dim { opacity: 0.22; }
+.cell.hl { box-shadow: 0 0 0 2px var(--ink); }
+.cell.pulse { animation: pulse .5s ease-out; }
+@keyframes pulse { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* devices */
+.mesh-scroll { overflow-x: auto; padding-bottom: 4px; }
+.mesh-frame { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; gap: 6px 8px; width: max-content; }
+.axis-top { grid-column: 2; font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.axis-left { grid-row: 2; writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); align-self: center; }
+.axis-top b, .axis-left b { color: var(--ink); }
+.mesh { grid-column: 2; grid-row: 2; display: grid; gap: 10px; }
+.device {
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+  background: var(--bg);
+  display: grid; gap: 6px; align-content: start; justify-items: start;
+  min-width: 96px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.device.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.device.hl { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.device.faded { opacity: 0.35; }
+.dev-head { display: flex; justify-content: space-between; gap: 8px; width: 100%; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+.dev-head b { color: var(--ink); font-weight: 600; }
+.slot {
+  background: transparent;
+  border: 1.5px dashed var(--line);
+  color: transparent;
+}
+.slot.filled {
+  background: color-mix(in oklab, var(--cc) 26%, var(--surface));
+  border: 1.5px solid color-mix(in oklab, var(--cc) 70%, var(--surface));
+  color: var(--ink);
+}
+.invalid {
+  border: 1px solid color-mix(in oklab, var(--danger) 50%, var(--line));
+  background: color-mix(in oklab, var(--danger) 8%, var(--surface));
+  color: var(--ink); border-radius: 8px; padding: 12px 14px; font-size: 0.9rem; max-width: 60ch;
+}
+.invalid code { color: var(--danger); display: block; margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+
+.flight { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 5; }
+.fly {
+  position: absolute; left: 0; top: 0;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--cc) 40%, var(--surface));
+  border: 1.5px solid var(--cc);
+  color: var(--ink);
+  transform-origin: 0 0;
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--ink) 18%, transparent);
+}
+
+/* bottom */
+.bottom { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.card h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+pre {
+  margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.6;
+}
+.tok-k { color: var(--c4); }
+.tok-s { color: var(--c2); }
+.tok-c { color: var(--muted); }
+.tok-o { color: var(--accent); font-weight: 600; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: 0.9rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.explain { margin: 0; max-width: 62ch; }
+.hint { margin: 0; color: var(--muted); font-size: 0.82rem; }
+
+@media (max-width: 760px) {
+  .stage { grid-template-columns: minmax(0, 1fr); padding: 14px; gap: 22px; }
+  .bottom { grid-template-columns: minmax(0, 1fr); }
+  .actions { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell, .device { transition: none; }
+  .cell.pulse { animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>How JAX shards an array</h1>
+    <p class="lede">A 8&times;4 array placed on 8 devices with <code>jax.device_put(x, NamedSharding(mesh, spec))</code>. Pick a mesh and a <code>PartitionSpec</code>, then press Play to watch each device receive its piece. Hover a device to see which values it holds, or hover a value to see which devices store it.</p>
+  </header>
+
+  <section class="controls" aria-label="Sharding settings">
+    <div class="group">
+      <span class="label" id="mesh-label">Mesh shape (data, model)</span>
+      <div class="seg" id="mesh-seg" role="group" aria-labelledby="mesh-label"></div>
+    </div>
+    <div class="group">
+      <span class="label" id="spec-label">PartitionSpec</span>
+      <div class="seg" id="spec-seg" role="group" aria-labelledby="spec-label"></div>
+    </div>
+    <div class="group speed">
+      <label class="label" for="speed">Speed <output id="speed-out" for="speed">1×</output></label>
+      <input type="range" id="speed" min="0.25" max="3" step="0.25" value="1" aria-describedby="speed-out">
+      <div class="speed-ends"><span>slower</span><span>faster</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="play">Play</button>
+      <button class="btn" id="step">Next device</button>
+      <button class="btn" id="reset">Clear</button>
+    </div>
+  </section>
+
+  <section class="stage" id="stage" aria-label="Array and devices">
+    <div class="panel">
+      <div>
+        <h2>Global array <span class="mono" style="font-weight:400;color:var(--muted)">x</span></h2>
+        <p class="sub" id="array-sub">What your code sees: one logical array.</p>
+      </div>
+      <div class="array-wrap">
+        <span></span>
+        <span class="dimtag" id="dim1tag"></span>
+        <span class="dimtag dim0" id="dim0tag"></span>
+        <div class="grid" id="array"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div>
+        <h2>Devices</h2>
+        <p class="sub" id="dev-sub">What each device stores in its own device memory (GPU or TPU HBM).</p>
+      </div>
+      <div class="mesh-scroll"><div id="mesh-area"></div></div>
+    </div>
+    <div class="flight" id="flight" aria-hidden="true"></div>
+  </section>
+
+  <section class="bottom">
+    <div class="card">
+      <h3>The code</h3>
+      <pre id="code"></pre>
+      <p class="hint">Outputs were produced by running this exact code on 8 simulated CPU devices with JAX 0.12.0.1.</p>
+    </div>
+    <div class="card">
+      <h3>What happened</h3>
+      <p class="explain" id="explain"></p>
+      <dl class="facts" id="facts"></dl>
+      <p class="hint">Memory here means device memory: each GPU or TPU has its own (for example 80 GB of HBM on an H100), separate from the computer's system RAM. JAX arrays live there by default (<code>memory_kind=device</code>). The 8 simulated CPU devices used to produce the outputs share system RAM, but the layout is the same.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const ROWS = 8, COLS = 4, N = ROWS * COLS;
+  const MESHES = [[4, 2], [2, 4], [8, 1], [1, 8]];
+  // each spec: per array dim -> null | [axis names]
+  const SPECS = [
+    { key: "dm",  label: 'P("data", "model")',         dims: [["data"], ["model"]] },
+    { key: "d_",  label: 'P("data", None)',            dims: [["data"], null] },
+    { key: "_m",  label: 'P(None, "model")',           dims: [null, ["model"]] },
+    { key: "md",  label: 'P("model", "data")',         dims: [["model"], ["data"]] },
+    { key: "dm0", label: 'P(("data", "model"), None)', dims: [["data", "model"], null] },
+    { key: "rep", label: 'P()',                        dims: [null, null] },
+  ];
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  const state = { mesh: [4, 2], spec: SPECS[0], next: 0, timers: [], anims: [], speed: 1 };
+  // base timings at 1x, in ms
+  const FLIGHT_MS = 720, CELL_STAGGER_MS = 22, DEVICE_GAP_MS = 520;
+
+  const $ = (id) => document.getElementById(id);
+  const meshSeg = $("mesh-seg"), specSeg = $("spec-seg");
+  const arrayEl = $("array"), meshArea = $("mesh-area"), flight = $("flight"), stage = $("stage");
+
+  const axisSize = (name) => (name === "data" ? state.mesh[0] : state.mesh[1]);
+  const pieces = (dimSpec) => (dimSpec ? dimSpec.reduce((p, a) => p * axisSize(a), 1) : 1);
+
+  function validity() {
+    const sizes = [ROWS, COLS];
+    for (let d = 0; d < 2; d++) {
+      const ds = state.spec.dims[d];
+      const p = pieces(ds);
+      if (sizes[d] % p !== 0) {
+        const tup = "(" + ds.map((a) => `'${a}'`).join(", ") + (ds.length === 1 ? "," : "") + ")";
+        return `ValueError: Sharding spec ${tup} implies that array axis ${d} is partitioned ${p} times, but does not evenly divide the dimension size ${sizes[d]}.`;
+      }
+    }
+    return null;
+  }
+
+  // index of device (i on data, j on model) along a dim spec
+  function coordFor(ds, i, j) {
+    let idx = 0;
+    for (const a of ds) idx = idx * axisSize(a) + (a === "data" ? i : j);
+    return idx;
+  }
+
+  function blockColor(r, c) {
+    const [d0, d1] = state.spec.dims;
+    const p0 = pieces(d0), p1 = pieces(d1);
+    const rb = Math.floor(r / (ROWS / p0)), cb = Math.floor(c / (COLS / p1));
+    return (rb * p1 + cb) % 8;
+  }
+
+  function deviceShard(i, j) {
+    const [d0, d1] = state.spec.dims;
+    const rr = d0 ? (() => { const s = ROWS / pieces(d0), k = coordFor(d0, i, j); return [k * s, (k + 1) * s]; })() : [0, ROWS];
+    const cc = d1 ? (() => { const s = COLS / pieces(d1), k = coordFor(d1, i, j); return [k * s, (k + 1) * s]; })() : [0, COLS];
+    return { rows: rr, cols: cc, shape: [rr[1] - rr[0], cc[1] - cc[0]] };
+  }
+
+  function typeofStr() {
+    const fmt = (n, ds) => (ds ? `${n}@${ds.length > 1 ? "(" + ds.join(",") + ")" : ds[0]}` : `${n}`);
+    return `float32[${fmt(ROWS, state.spec.dims[0])},${fmt(COLS, state.spec.dims[1])}]`;
+  }
+
+  /* ---------- controls ---------- */
+  function buildControls() {
+    meshSeg.innerHTML = "";
+    MESHES.forEach((m) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.id = `mesh-${m[0]}x${m[1]}`;
+      b.textContent = `${m[0]} × ${m[1]}`;
+      b.setAttribute("aria-pressed", String(m[0] === state.mesh[0] && m[1] === state.mesh[1]));
+      b.addEventListener("click", () => { state.mesh = m; refresh(true); });
+      meshSeg.appendChild(b);
+    });
+    specSeg.innerHTML = "";
+    SPECS.forEach((s) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.id = `spec-${s.key}`;
+      b.textContent = s.label;
+      b.setAttribute("aria-pressed", String(s === state.spec));
+      b.addEventListener("click", () => { state.spec = s; refresh(true); });
+      specSeg.appendChild(b);
+    });
+  }
+
+  /* ---------- rendering ---------- */
+  let cellEls = [];
+  function renderArray() {
+    arrayEl.innerHTML = "";
+    arrayEl.style.gridTemplateColumns = `repeat(${COLS}, auto)`;
+    cellEls = [];
+    for (let r = 0; r < ROWS; r++) {
+      cellEls.push([]);
+      for (let c = 0; c < COLS; c++) {
+        const el = document.createElement("div");
+        el.className = "cell";
+        el.style.setProperty("--cc", `var(--c${blockColor(r, c)})`);
+        el.textContent = r * COLS + c;
+        el.dataset.r = r; el.dataset.c = c;
+        el.addEventListener("mouseenter", () => hoverValue(r, c, true));
+        el.addEventListener("mouseleave", () => hoverValue(r, c, false));
+        arrayEl.appendChild(el);
+        cellEls[r].push(el);
+      }
+    }
+    const [d0, d1] = state.spec.dims;
+    const t = (n, ds, word) => ds
+      ? `${word} <b>${n}</b> · split ${pieces(ds)}× over <b>${ds.join("+")}</b>`
+      : `${word} <b>${n}</b> · not split`;
+    $("dim0tag").innerHTML = t(ROWS, d0, "dim 0");
+    $("dim1tag").innerHTML = t(COLS, d1, "dim 1");
+  }
+
+  let devices = [];
+  function renderMesh() {
+    meshArea.innerHTML = "";
+    devices = [];
+    const err = validity();
+    if (err) {
+      const box = document.createElement("div");
+      box.className = "invalid";
+      box.innerHTML = `This layout isn't allowed: a dimension must split evenly. JAX raises:<code></code>`;
+      box.querySelector("code").textContent = err;
+      meshArea.appendChild(box);
+      return;
+    }
+    const [mr, mc] = state.mesh;
+    const frame = document.createElement("div");
+    frame.className = "mesh-frame";
+    frame.innerHTML = `<span></span><span class="axis-top">model → size <b>${mc}</b></span><span class="axis-left">data → size <b>${mr}</b></span>`;
+    const mesh = document.createElement("div");
+    mesh.className = "mesh";
+    mesh.style.gridTemplateColumns = `repeat(${mc}, auto)`;
+    for (let i = 0; i < mr; i++) {
+      for (let j = 0; j < mc; j++) {
+        const id = i * mc + j;
+        const sh = deviceShard(i, j);
+        const longest = Math.max(sh.shape[0], sh.shape[1]);
+        const cs = Math.max(13, Math.min(28, Math.floor(118 / longest)));
+        const dev = document.createElement("div");
+        dev.className = "device";
+        dev.innerHTML = `<div class="dev-head"><b>CPU ${id}</b><span>(${sh.shape[0]}, ${sh.shape[1]})</span></div>`;
+        const g = document.createElement("div");
+        g.className = "grid";
+        g.style.gridTemplateColumns = `repeat(${sh.shape[1]}, auto)`;
+        g.style.gap = cs < 18 ? "2px" : "3px";
+        const slots = [];
+        for (let r = sh.rows[0]; r < sh.rows[1]; r++) {
+          for (let c = sh.cols[0]; c < sh.cols[1]; c++) {
+            const s = document.createElement("div");
+            s.className = "cell slot";
+            s.style.setProperty("--cs", cs + "px");
+            s.style.setProperty("--fs", cs < 20 ? "0" : "0.68rem");
+            s.style.setProperty("--cc", `var(--c${blockColor(r, c)})`);
+            s.textContent = r * COLS + c;
+            slots.push({ el: s, r, c });
+            g.appendChild(s);
+          }
+        }
+        dev.appendChild(g);
+        dev.addEventListener("mouseenter", () => hoverDevice(id, true));
+        dev.addEventListener("mouseleave", () => hoverDevice(id, false));
+        mesh.appendChild(dev);
+        devices.push({ id, el: dev, slots, shard: sh, i, j, cs });
+      }
+    }
+    frame.appendChild(mesh);
+    meshArea.appendChild(frame);
+  }
+
+  function renderCode() {
+    const [mr, mc] = state.mesh;
+    const err = validity();
+    const k = (s) => `<span class="tok-k">${s}</span>`;
+    const s = (t) => `<span class="tok-s">${t}</span>`;
+    const c = (t) => `<span class="tok-c">${t}</span>`;
+    const o = (t) => `<span class="tok-o">${t}</span>`;
+    const specHtml = state.spec.label.replace(/"([a-z]+)"/g, (_, w) => s(`"${w}"`)).replace(/None/g, k("None"));
+    let out = `mesh = jax.make_mesh((${mr}, ${mc}), (${s('"data"')}, ${s('"model"')}))\n` +
+      `x = jnp.arange(${N}.).reshape(${ROWS}, ${COLS})\n` +
+      `xs = jax.device_put(x, NamedSharding(mesh, ${specHtml}))\n\n`;
+    if (err) {
+      out += c("# ") + o(escapeHtml(err.split(".")[0] + "."));
+    } else {
+      const sh = devices[0].shard.shape;
+      out += `jax.typeof(xs)\n${c("# →")} ${o(typeofStr())}\n\n` +
+        `xs.addressable_shards[0].data.shape\n${c("# →")} ${o(`(${sh[0]}, ${sh[1]})`)}`;
+    }
+    $("code").innerHTML = out;
+  }
+
+  function renderFacts() {
+    const err = validity();
+    const facts = $("facts");
+    if (err) {
+      $("explain").textContent = "Pick a different mesh or spec. Each split dimension must divide evenly by the number of devices along its mesh axes.";
+      facts.innerHTML = "";
+      return;
+    }
+    const [d0, d1] = state.spec.dims;
+    const used = new Set([...(d0 || []), ...(d1 || [])]);
+    const unused = ["data", "model"].filter((a) => !used.has(a));
+    const copies = unused.reduce((p, a) => p * axisSize(a), 1);
+    const sh = devices[0].shard.shape;
+    const per = sh[0] * sh[1];
+
+    const part = (n, ds, what) => ds
+      ? `the ${n} ${what} are split into ${pieces(ds)} pieces along <b>${ds.join(" and ")}</b>`
+      : `the ${n} ${what} are not split`;
+    let text = `${cap(part(ROWS, d0, "rows"))}, and ${part(COLS, d1, "columns")}. `;
+    if (copies === 1) text += "Every device holds a different piece, so no value is stored twice. Each device's memory holds only its share of the array.";
+    else if (copies === 8) text += "Every device holds the full array. This is replication: no device memory is saved, since each device's memory holds the whole array, but no communication between devices is needed to read it.";
+    else text += `The spec doesn't mention <b>${unused.join(", ")}</b>, so devices along that axis hold identical copies of the same piece in their device memory.`;
+    $("explain").innerHTML = text;
+
+    facts.innerHTML = `
+      <dt>Shape per device</dt><dd>(${sh[0]}, ${sh[1]})</dd>
+      <dt>Device memory per device</dt><dd>${per} of ${N} values  (${Math.round(per / N * 100)}%)</dd>
+      <dt>Copies of each value</dt><dd>${copies}</dd>
+      <dt>Total across all devices</dt><dd>${per * 8} values for ${N} unique</dd>`;
+  }
+
+  const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const escapeHtml = (t) => t.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
+
+  /* ---------- hover links ---------- */
+  function hoverDevice(id, on) {
+    const d = devices[id];
+    if (!d) return;
+    d.el.classList.toggle("hl", on);
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const inside = r >= d.shard.rows[0] && r < d.shard.rows[1] && c >= d.shard.cols[0] && c < d.shard.cols[1];
+      cellEls[r][c].classList.toggle("dim", on && !inside);
+      cellEls[r][c].classList.toggle("hl", on && inside);
+    }
+  }
+  function hoverValue(r, c, on) {
+    cellEls[r][c].classList.toggle("hl", on);
+    devices.forEach((d) => {
+      const inside = r >= d.shard.rows[0] && r < d.shard.rows[1] && c >= d.shard.cols[0] && c < d.shard.cols[1];
+      d.el.classList.toggle("hl", on && inside);
+      d.el.classList.toggle("faded", on && !inside);
+      d.slots.forEach((s) => s.el.classList.toggle("hl", on && s.r === r && s.c === c));
+    });
+  }
+
+  /* ---------- animation ---------- */
+  function stopAll() {
+    state.timers.forEach(clearTimeout); state.timers = [];
+    state.anims.forEach((a) => { try { a.cancel(); } catch (e) {} }); state.anims = [];
+    flight.innerHTML = "";
+    devices.forEach((d) => d.el.classList.remove("active"));
+  }
+  function clearDevices() {
+    stopAll();
+    devices.forEach((d) => d.slots.forEach((s) => s.el.classList.remove("filled")));
+    state.next = 0;
+    updateButtons();
+  }
+  function fillAll() {
+    stopAll();
+    devices.forEach((d) => d.slots.forEach((s) => s.el.classList.add("filled")));
+    state.next = devices.length;
+    updateButtons();
+  }
+  function updateButtons() {
+    const ok = !validity();
+    $("play").disabled = !ok;
+    $("step").disabled = !ok || state.next >= devices.length;
+    $("reset").disabled = !ok;
+    $("play").textContent = state.next >= devices.length && ok ? "Replay" : "Play";
+  }
+
+  function rectIn(el) {
+    const a = el.getBoundingClientRect(), s = stage.getBoundingClientRect();
+    return { x: a.left - s.left, y: a.top - s.top, w: a.width, h: a.height };
+  }
+
+  function sendDevice(k) {
+    const d = devices[k];
+    if (!d) return;
+    d.el.classList.add("active");
+    if (reduce.matches) {
+      d.slots.forEach((s) => s.el.classList.add("filled"));
+      d.el.classList.remove("active");
+      return;
+    }
+    d.el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    let left = d.slots.length;
+    d.slots.forEach((s, n) => {
+      const src = cellEls[s.r][s.c];
+      const a = rectIn(src), b = rectIn(s.el);
+      const f = document.createElement("div");
+      f.className = "fly";
+      f.style.setProperty("--cc", `var(--c${blockColor(s.r, s.c)})`);
+      f.style.width = a.w + "px"; f.style.height = a.h + "px";
+      f.style.fontSize = "0.75rem";
+      f.textContent = s.r * 4 + s.c;
+      flight.appendChild(f);
+      const sx = b.w / a.w, sy = b.h / a.h;
+      const midY = Math.min(a.y, b.y) - 18;
+      const anim = f.animate([
+        { transform: `translate(${a.x}px, ${a.y}px) scale(1, 1)`, opacity: 0.95 },
+        { transform: `translate(${(a.x + b.x) / 2}px, ${midY}px) scale(${(1 + sx) / 2}, ${(1 + sy) / 2})`, opacity: 1, offset: 0.45 },
+        { transform: `translate(${b.x}px, ${b.y}px) scale(${sx}, ${sy})`, opacity: 1 },
+      ], { duration: FLIGHT_MS / state.speed, delay: n * CELL_STAGGER_MS / state.speed, easing: "cubic-bezier(.25,.7,.25,1)", fill: "both" });
+      anim.baseSpeed = state.speed;
+      state.anims.push(anim);
+      const t = setTimeout(() => { src.classList.remove("pulse"); void src.offsetWidth; src.classList.add("pulse"); }, n * CELL_STAGGER_MS / state.speed);
+      state.timers.push(t);
+      anim.onfinish = () => {
+        s.el.classList.add("filled");
+        f.remove();
+        if (--left === 0) d.el.classList.remove("active");
+      };
+    });
+  }
+
+  function play() {
+    clearDevices();
+    // schedule one device at a time so a speed change applies to the devices still waiting
+    const sendFrom = (k) => {
+      if (k >= devices.length) return;
+      sendDevice(k);
+      state.next = k + 1;
+      updateButtons();
+      const gap = reduce.matches ? 0 : DEVICE_GAP_MS / state.speed;
+      state.timers.push(setTimeout(() => sendFrom(k + 1), gap));
+    };
+    sendFrom(0);
+  }
+
+  const speedEl = $("speed"), speedOut = $("speed-out");
+  function setSpeed() {
+    state.speed = parseFloat(speedEl.value) || 1;
+    speedOut.textContent = `${state.speed}×`;
+    // also speed up or slow down cells already in flight
+    state.anims.forEach((a) => {
+      const rate = state.speed / (a.baseSpeed || 1);
+      try { a.updatePlaybackRate ? a.updatePlaybackRate(rate) : (a.playbackRate = rate); } catch (e) {}
+    });
+  }
+  speedEl.addEventListener("input", setSpeed);
+  setSpeed();
+  function step() {
+    if (state.next >= devices.length) return;
+    const k = state.next++;
+    sendDevice(k);
+    updateButtons();
+  }
+
+  function refresh(animate) {
+    stopAll();
+    buildControls();
+    renderArray();
+    renderMesh();
+    renderCode();
+    renderFacts();
+    // disable spec/mesh combos JAX would reject
+    const keep = { mesh: state.mesh, spec: state.spec };
+    MESHES.forEach((m) => {
+      state.mesh = m;
+      const ok = !validity();
+      $(`mesh-${m[0]}x${m[1]}`).title = ok ? "" : "Not evenly divisible with the selected spec";
+      state.mesh = keep.mesh;
+    });
+    SPECS.forEach((s) => {
+      state.spec = s;
+      const ok = !validity();
+      const b = $(`spec-${s.key}`);
+      b.disabled = !ok && s !== keep.spec;
+      b.title = ok ? "" : "Not evenly divisible on this mesh";
+      state.spec = keep.spec;
+    });
+    if (validity()) { state.next = 0; updateButtons(); return; }
+    if (animate) { clearDevices(); requestAnimationFrame(() => requestAnimationFrame(play)); }
+    else fillAll();
+  }
+
+  $("play").addEventListener("click", play);
+  $("step").addEventListener("click", step);
+  $("reset").addEventListener("click", clearDevices);
+  window.addEventListener("resize", () => { if (state.anims.length) fillAll(); });
+
+  refresh(false);
+})();
+</script>
+
+</body></html>
