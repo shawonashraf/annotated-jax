@@ -50,6 +50,13 @@ rocm = [
 mps = [
     "jax-mps>=0.10.0 ; sys_platform == 'darwin'",
 ]
+site = [
+    "markdown-it-py>=4.0.0",
+    "myst-nb>=1.4.0",
+    "pydata-sphinx-theme>=0.24.0",
+    "pytest>=9.2.0",
+    "sphinx>=9.2.0",
+]
 
 [tool.uv]
 # The backends are mutually exclusive, so lock them as separate resolutions.

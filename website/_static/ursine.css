@@ -1,0 +1,159 @@
+/*
+ * Ursine, ported from the Typora theme by Daniel Hernandez (MIT),
+ * https://github.com/noatpad/typora-theme-ursine. Same palette as
+ * shawonashraf.github.io/blog: light mode is Polar, dark mode is Umbra. Fonts
+ * follow the theme's "Alt" pack (Roboto Slab, Open Sans, Fira Mono) because
+ * Avenir Next and Adelle are commercial.
+ *
+ * pydata-sphinx-theme always sets html[data-theme] to "light" or "dark", so
+ * these blocks (loaded after the theme's CSS) override its variables.
+ */
+
+html[data-theme] {
+  --pst-font-family-base: 'Open Sans', 'Lato', sans-serif;
+  --pst-font-family-heading: 'Roboto Slab', 'Times New Roman', serif;
+  --pst-font-family-monospace: 'Fira Mono', 'Cousine', 'Consolas', monospace;
+  --pst-font-weight-heading: 400;
+}
+
+/* Polar */
+html[data-theme="light"] {
+  --pst-color-background: #fbfbfb;
+  --pst-color-on-background: #fbfbfb;
+  --pst-color-surface: #fafafa;
+  --pst-color-on-surface: #333333;
+  --pst-color-text-base: #333333;
+  --pst-color-heading: #333333;
+  --pst-color-text-muted: #757575;
+  --pst-color-primary: #db4d52;
+  --pst-color-secondary: #be2f34;
+  --pst-color-accent: #db4d52;
+  --pst-color-link: #db4d52;
+  --pst-color-link-hover: #be2f34;
+  --pst-color-border: #dddddd;
+  --pst-color-inline-code: #3a3432;
+  --pst-color-inline-code-links: #db4d52;
+  --pst-color-target: #fbb6b7;
+  --pst-color-table-heading-bg: #dddddd;
+  --pst-color-table-row-zebra-high-bg: #e6e6e6;
+  --ursine-code-color: #3a3432;
+  --ursine-code-border: #0000001a;
+  --ursine-quote-color: #827676;
+  --ursine-selection-bg: #fbb6b7;
+  --ursine-mark-bg: #c7f661d3;
+}
+
+/* Umbra */
+html[data-theme="dark"] {
+  --pst-color-background: #1e2022;
+  --pst-color-on-background: #1e2022;
+  --pst-color-surface: #282a36;
+  --pst-color-on-surface: #dddddd;
+  --pst-color-text-base: #dddddd;
+  --pst-color-heading: #dddddd;
+  --pst-color-text-muted: #757575;
+  --pst-color-primary: #428bca;
+  --pst-color-secondary: #9ddcfd;
+  --pst-color-accent: #428bca;
+  --pst-color-link: #6bcafb;
+  --pst-color-link-hover: #9ddcfd;
+  --pst-color-border: #3c3c3c;
+  --pst-color-inline-code: #f8f8f2;
+  --pst-color-inline-code-links: #6bcafb;
+  --pst-color-target: #285194;
+  --pst-color-table-heading-bg: #4d4d4d;
+  --pst-color-table-row-zebra-high-bg: #3c3c3c;
+  --ursine-code-color: #f8f8f2;
+  --ursine-code-border: #ffffff26;
+  --ursine-quote-color: #888e9c;
+  --ursine-selection-bg: #285194;
+  --ursine-mark-bg: #107da2eb;
+}
+
+/* Text details from the blog */
+::selection { background: var(--ursine-selection-bg); }
+
+mark { background: var(--ursine-mark-bg); color: inherit; }
+
+li::marker { color: var(--pst-color-primary); font-weight: 600; }
+
+.bd-article blockquote {
+  border-left: .25rem solid var(--pst-color-primary);
+  background: none;
+  font-family: var(--pst-font-family-heading);
+  font-weight: 200;
+  color: var(--ursine-quote-color);
+}
+
+/* Code blocks: notebook cells get the same plain box as the blog's code. */
+html[data-theme] {
+  --mystnb-source-margin-color: var(--ursine-code-border);
+  --mystnb-source-border-color: var(--ursine-code-border);
+  --mystnb-source-bg-color: var(--pst-color-surface);
+}
+
+html[data-theme] div.highlight,
+html[data-theme] div.highlight pre {
+  background: var(--pst-color-surface);
+  color: var(--ursine-code-color);
+}
+
+html[data-theme] div.highlight pre {
+  border: 1px solid var(--ursine-code-border);
+}
+
+/*
+ * Token colours. The reset clears the theme's own Pygments colours so only
+ * these apply; the token rules have the same specificity and come later.
+ */
+html[data-theme] div.highlight [class] {
+  color: inherit;
+  background: none;
+  font-style: normal;
+  font-weight: normal;
+}
+
+/*
+ * Polar: CodeMirror "3024 Day". Three of the theme's values (#e8bbd0, #50fa7b,
+ * #ffb86c) are unreadable on the light background, so those use the 3024 base16
+ * blue instead (as on the blog).
+ */
+html[data-theme="light"] div.highlight :is(.c, .cm, .c1, .cs, .cp, .cpf, .ch) { color: #cdab53; }
+html[data-theme="light"] div.highlight .err { color: #5c5855; background-color: #db2d20; }
+html[data-theme="light"] div.highlight :is(.k, .kd, .kn, .kp, .kr, .ow) { color: #db2d20; }
+html[data-theme="light"] div.highlight .kc { color: #a16a94; }
+html[data-theme="light"] div.highlight :is(.kt, .nc, .nf, .fm) { color: #01a0e4; }
+html[data-theme="light"] div.highlight .o { color: #ff79c6; }
+html[data-theme="light"] div.highlight .nd { color: #a16a94; }
+html[data-theme="light"] div.highlight :is(.ne, .nt) { color: #db2d20; }
+html[data-theme="light"] div.highlight :is(.na, .py, .nb, .bp, .nv, .vc, .vg, .vi, .vm, .no, .ni, .nl) { color: #01a252; }
+html[data-theme="light"] div.highlight .nn { color: #3a3432; }
+html[data-theme="light"] div.highlight :is(.m, .mf, .mh, .mi, .mo, .il, .mb, .mx) { color: #a16a94; }
+html[data-theme="light"] div.highlight :is(.s, .sa, .sb, .sc, .dl, .sd, .s2, .se, .sh, .si, .sx, .s1, .ss, .sr) { color: #f2b01d; }
+html[data-theme="light"] div.highlight .gd { color: #db2d20; background-color: #fbe3e2; }
+html[data-theme="light"] div.highlight .gi { color: #01a252; background-color: #e0f5e9; }
+html[data-theme="light"] div.highlight :is(.gr, .gt) { color: #db2d20; }
+html[data-theme="light"] div.highlight :is(.gh, .gu) { color: #807d7c; font-weight: bold; }
+html[data-theme="light"] div.highlight .go { color: #6d8a88; }
+html[data-theme="light"] div.highlight .gp { color: #807d7c; }
+html[data-theme="light"] div.highlight .w { color: #d6d5d4; }
+
+/* Umbra: CodeMirror Dracula. */
+html[data-theme="dark"] div.highlight :is(.c, .cm, .c1, .cs, .cp, .cpf, .ch) { color: #6272a4; }
+html[data-theme="dark"] div.highlight .err { color: #282a36; background-color: #ff5555; }
+html[data-theme="dark"] div.highlight :is(.k, .kd, .kn, .kp, .kr, .ow) { color: #ff79c6; }
+html[data-theme="dark"] div.highlight .kc { color: #bd93f9; }
+html[data-theme="dark"] div.highlight .kt { color: #ffb86c; }
+html[data-theme="dark"] div.highlight :is(.nc, .nf, .fm) { color: #8be9fd; }
+html[data-theme="dark"] div.highlight :is(.o, .ne, .nt) { color: #ff79c6; }
+html[data-theme="dark"] div.highlight .nd { color: #bd93f9; }
+html[data-theme="dark"] div.highlight :is(.na, .py) { color: #66d9ef; }
+html[data-theme="dark"] div.highlight :is(.nb, .bp, .nv, .vc, .vg, .vi, .vm, .no, .ni, .nl) { color: #50fa7b; }
+html[data-theme="dark"] div.highlight .nn { color: #f8f8f2; }
+html[data-theme="dark"] div.highlight :is(.m, .mf, .mh, .mi, .mo, .il, .mb, .mx) { color: #bd93f9; }
+html[data-theme="dark"] div.highlight :is(.s, .sa, .sb, .sc, .dl, .sd, .s2, .se, .sh, .si, .sx, .s1, .ss, .sr) { color: #f1fa8c; }
+html[data-theme="dark"] div.highlight .gd { color: #ff5555; background-color: #3a1d1d; }
+html[data-theme="dark"] div.highlight .gi { color: #50fa7b; background-color: #12261e; }
+html[data-theme="dark"] div.highlight :is(.gr, .gt) { color: #ff5555; }
+html[data-theme="dark"] div.highlight :is(.gh, .gu, .go, .gp) { color: #6d8a88; }
+html[data-theme="dark"] div.highlight .w { color: #3b4254; }

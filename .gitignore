@@ -159,3 +159,8 @@ cython_debug/
 .idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+# website build output
+website/_src/
+website/_build/
+website/jupyter_execute/

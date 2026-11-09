@@ -61,3 +61,17 @@ JAX_PLATFORMS=mps uv run utils/device.py
 ```
 
 Inside jupyter notebooks, either set the env var before starting the kernel or call `setup_backend()` from `utils/device.py` before importing anything that initialises jax. The `mps` backend is still experimental upstream, so not every jax op is supported yet.
+
+## website
+
+The site at <https://shawonashraf.github.io/annotated-jax/> is built from the notebooks in `notebooks/` only; `playground/` and everything else is left out. Pages show the outputs saved in each notebook; nothing is executed at build time, so save notebooks with their outputs. A page's title comes from its file name with the number prefix dropped: `07_autodiff_and_linear_regression.ipynb` → "Autodiff And Linear Regression".
+
+Preview locally:
+
+```bash
+website/build.sh && python3 -m http.server -d website/_build 8000
+```
+
+then open <http://localhost:8000/>. The site's build dependencies live in the `site` dependency group, which is all the deploy workflow installs. Tests: `uv run --only-group site pytest website/tests`.
+
+Every push to `main` builds and deploys the site with GitHub Actions. One-time setup: in the repo's Settings › Pages, set Source to "GitHub Actions".

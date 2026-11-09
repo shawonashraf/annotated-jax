@@ -1,0 +1,6 @@
+{# Show the whole topic tree (startdepth=0), not just the current section. #}
+<nav class="bd-docs-nav bd-links" aria-label="Topics">
+  <div class="bd-toc-item navbar-nav">
+    {{- generate_toctree_html("sidebar", startdepth=0, show_nav_level=1, maxdepth=0, collapse=False, includehidden=True, titles_only=True) -}}
+  </div>
+</nav>
